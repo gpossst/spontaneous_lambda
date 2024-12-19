@@ -3,7 +3,7 @@ from typing import Optional
 import uvicorn
 import os
 import logging
-from lambda_function import get_ski_prices
+from lambda_function import get_ski_prices_async
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -16,8 +16,8 @@ async def get_prices(date: Optional[str] = Query(None), resorts: Optional[str] =
     try:
         logger.debug(f"Received request - date: {date}, resorts: {resorts}")
         
-        # Use your existing get_ski_prices function
-        response = get_ski_prices(date, resorts.split(',') if resorts else None)
+        # Use the async version of get_ski_prices
+        response = await get_ski_prices_async(date, resorts.split(',') if resorts else None)
         logger.debug(f"Response: {response}")
         
         return response

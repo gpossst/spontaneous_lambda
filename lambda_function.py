@@ -1,4 +1,4 @@
-from playwright.sync_api import sync_playwright
+from playwright.async_api import async_playwright
 import json
 import time
 from resorts import snowshoe_wv, wintergreen_va, massanutten_va
@@ -6,80 +6,77 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def get_ski_prices(date, resorts=None):
+async def get_ski_prices_async(date, resorts=None):
     if resorts is None:
         resorts = ['snowshoe', 'wintergreen']
         
     start_time = time.time()
     results = {}
     
-    playwright = sync_playwright().start()
-    browser = None
-    page = None
-    
-    try:
-        browser = playwright.chromium.launch(
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(
             headless=True,
             args=['--no-sandbox', '--disable-dev-shm-usage']
         )
-        page = browser.new_page(viewport={'width': 1280, 'height': 720})
+        page = await browser.new_page(viewport={'width': 1280, 'height': 720})
         
-        resort_functions = {
-            'snowshoe': snowshoe_wv.get_prices,
-            'wintergreen': wintergreen_va.get_prices,
-            'massanutten': massanutten_va.get_prices,
-        }
-        
-        for resort in resorts:
-            if resort in resort_functions:
-                try:
-                    results[resort] = {
-                        'price': resort_functions[resort](page, date),
-                        'status': 'success'
-                    }
-                except Exception as e:
-                    logger.error(f"Error processing {resort}: {str(e)}")
+        try:
+            resort_functions = {
+                'snowshoe': snowshoe_wv.get_prices_async,
+                'wintergreen': wintergreen_va.get_prices_async,
+                'massanutten': massanutten_va.get_prices_async,
+            }
+            
+            for resort in resorts:
+                if resort in resort_functions:
+                    try:
+                        results[resort] = {
+                            'price': await resort_functions[resort](page, date),
+                            'status': 'success'
+                        }
+                    except Exception as e:
+                        logger.error(f"Error processing {resort}: {str(e)}")
+                        results[resort] = {
+                            'price': None,
+                            'status': 'error',
+                            'message': str(e)
+                        }
+                else:
                     results[resort] = {
                         'price': None,
                         'status': 'error',
-                        'message': str(e)
+                        'message': 'Invalid resort specified'
                     }
-            else:
-                results[resort] = {
-                    'price': None,
-                    'status': 'error',
-                    'message': 'Invalid resort specified'
-                }
-                
-        execution_time = time.time() - start_time
-        
-        return {
-            "results": results,
-            "execution_time_seconds": round(execution_time, 2)
-        }
-        
-    except Exception as e:
-        logger.error(f"Browser error: {str(e)}")
-        return {
-            "results": {"error": str(e)},
-            "execution_time_seconds": round(time.time() - start_time, 2)
-        }
-        
-    finally:
-        if page:
+                    
+            execution_time = time.time() - start_time
+            
+            return {
+                "results": results,
+                "execution_time_seconds": round(execution_time, 2)
+            }
+            
+        except Exception as e:
+            logger.error(f"Browser error: {str(e)}")
+            return {
+                "results": {"error": str(e)},
+                "execution_time_seconds": round(time.time() - start_time, 2)
+            }
+            
+        finally:
+            if page:
+                try:
+                    await page.close()
+                except:
+                    pass
+            if browser:
+                try:
+                    await browser.close()
+                except:
+                    pass
             try:
-                page.close()
+                await playwright.stop()
             except:
                 pass
-        if browser:
-            try:
-                browser.close()
-            except:
-                pass
-        try:
-            playwright.stop()
-        except:
-            pass
 
 def lambda_handler(event, context):
     try:
@@ -91,7 +88,7 @@ def lambda_handler(event, context):
         logger.debug(f"Requested resorts: {resorts}")
         logger.debug(f"Requested date: {date}")
         
-        response = get_ski_prices(date, resorts)
+        response = get_ski_prices_async(date, resorts)
         
         return {
             'statusCode': 200,
