@@ -1,16 +1,16 @@
 from bs4 import BeautifulSoup
-from playwright.sync_api import TimeoutError as PlaywrightTimeout
+from playwright.async_api import TimeoutError as PlaywrightTimeout
 from datetime import datetime
 
-def get_prices(page, date=None):
+async def get_prices_async(page, date=None):
     """Get ski prices for Snowshoe"""
     try:
         url = "https://shop.snowshoemtn.com/s/winter-lift-tickets/day-lift-tickets/"
-        page.goto(url, wait_until='networkidle', timeout=5500)
+        await page.goto(url, wait_until='networkidle', timeout=5500)
         
-        page.wait_for_load_state('networkidle')
+        await page.wait_for_load_state('networkidle')
         
-        content = page.content()
+        content = await page.content()
         soup = BeautifulSoup(content, 'html.parser')
         out = [span.text for span in soup.find_all('span', class_='price-major', limit=7)]
         
