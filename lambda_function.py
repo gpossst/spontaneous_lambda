@@ -13,40 +13,73 @@ def get_ski_prices(date, resorts=None):
     start_time = time.time()
     results = {}
     
-    with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=True)
+    playwright = sync_playwright().start()
+    browser = None
+    page = None
+    
+    try:
+        browser = playwright.chromium.launch(
+            headless=True,
+            args=['--no-sandbox', '--disable-dev-shm-usage']
+        )
         page = browser.new_page(viewport={'width': 1280, 'height': 720})
         
-        try:
-            resort_functions = {
-                'snowshoe': snowshoe_wv.get_prices,
-                'wintergreen': wintergreen_va.get_prices,
-                'massanutten': massanutten_va.get_prices,
-            }
-            
-            for resort in resorts:
-                if resort in resort_functions:
+        resort_functions = {
+            'snowshoe': snowshoe_wv.get_prices,
+            'wintergreen': wintergreen_va.get_prices,
+            'massanutten': massanutten_va.get_prices,
+        }
+        
+        for resort in resorts:
+            if resort in resort_functions:
+                try:
                     results[resort] = {
                         'price': resort_functions[resort](page, date),
                         'status': 'success'
                     }
-                else:
+                except Exception as e:
+                    logger.error(f"Error processing {resort}: {str(e)}")
                     results[resort] = {
-                        'price': [],
+                        'price': None,
                         'status': 'error',
-                        'message': 'Invalid resort specified'
+                        'message': str(e)
                     }
-                    
-            execution_time = time.time() - start_time
-            
-            return {
-                "results": results,
-                "execution_time_seconds": round(execution_time, 2)
-            }
-            
-        finally:
-            page.close()
-            browser.close()
+            else:
+                results[resort] = {
+                    'price': None,
+                    'status': 'error',
+                    'message': 'Invalid resort specified'
+                }
+                
+        execution_time = time.time() - start_time
+        
+        return {
+            "results": results,
+            "execution_time_seconds": round(execution_time, 2)
+        }
+        
+    except Exception as e:
+        logger.error(f"Browser error: {str(e)}")
+        return {
+            "results": {"error": str(e)},
+            "execution_time_seconds": round(time.time() - start_time, 2)
+        }
+        
+    finally:
+        if page:
+            try:
+                page.close()
+            except:
+                pass
+        if browser:
+            try:
+                browser.close()
+            except:
+                pass
+        try:
+            playwright.stop()
+        except:
+            pass
 
 def lambda_handler(event, context):
     try:
