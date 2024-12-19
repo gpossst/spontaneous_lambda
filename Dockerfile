@@ -16,5 +16,5 @@ RUN playwright install-deps chromium
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 
-# Run the Lambda function
-CMD ["python", "lambda_function.py"] 
+# Run the FastAPI server
+CMD ["python", "app.py"]
