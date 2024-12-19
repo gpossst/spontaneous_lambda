@@ -1,16 +1,17 @@
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
+from playwright.async_api import TimeoutError as PlaywrightTimeout
 
-def get_prices(page, date=None):
+async def get_prices_async(page, date=None):
     """Get ski prices for Wintergreen"""
     try:
         if not date:
             date = '2024-12-14'  # Default date if none provided
             
         url = f"https://wintergreenresort.ltibooking.com/products/search?start_date={date}"
-        page.goto(url, wait_until='networkidle', timeout=4500)
+        await page.goto(url, wait_until='networkidle', timeout=4500)
         
-        content = page.content()
+        content = await page.content()
         soup = BeautifulSoup(content, 'html.parser')
         
         product_rows = soup.findAll('div', class_="product-row")

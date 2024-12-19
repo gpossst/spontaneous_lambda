@@ -1,8 +1,8 @@
 from bs4 import BeautifulSoup
-from playwright.sync_api import TimeoutError as PlaywrightTimeout
+from playwright.async_api import TimeoutError as PlaywrightTimeout
 from datetime import datetime
 
-def get_prices(page, date=None):
+async def get_prices_async(page, date=None):
     """Get ski prices for Massanutten"""
     try:
         if not date:
@@ -16,14 +16,14 @@ def get_prices(page, date=None):
         calendar_data = []
         
         # Set up network request interceptor
-        def handle_response(response):
+        async def handle_response(response):
             if "ActivityCalendar" in response.url:
-                calendar_data.append(response.json())
+                calendar_data.append(await response.json())
                 
         page.on("response", handle_response)
         
         # Navigate to the page
-        page.goto(url, wait_until='networkidle', timeout=10000)
+        await page.goto(url, wait_until='networkidle', timeout=10000)
         
         if calendar_data:
             data = calendar_data[0]
