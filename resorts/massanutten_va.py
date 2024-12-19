@@ -23,7 +23,7 @@ async def get_prices_async(page, date=None):
         page.on("response", handle_response)
         
         # Navigate to the page
-        await page.goto(url, wait_until='networkidle', timeout=10000)
+        await page.goto(url, wait_until='networkidle', timeout=30000)
         
         if calendar_data:
             data = calendar_data[0]

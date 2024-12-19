@@ -1,21 +1,34 @@
 from bs4 import BeautifulSoup
 from playwright.async_api import TimeoutError as PlaywrightTimeout
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 async def get_prices_async(page, date=None):
     """Get ski prices for Snowshoe"""
     try:
         url = "https://shop.snowshoemtn.com/s/winter-lift-tickets/day-lift-tickets/"
-        await page.goto(url, wait_until='networkidle', timeout=5500)
+        logger.debug(f"Navigating to {url}")
         
-        await page.wait_for_load_state('networkidle')
+        # Increase timeout and add more detailed waiting strategy
+        await page.goto(url, wait_until='domcontentloaded', timeout=30000)
+        
+        try:
+            # Wait specifically for the price elements
+            await page.wait_for_selector('span.price-major', timeout=30000)
+        except PlaywrightTimeout:
+            logger.error("Timeout waiting for price elements")
+            return []
         
         content = await page.content()
         soup = BeautifulSoup(content, 'html.parser')
         out = [span.text for span in soup.find_all('span', class_='price-major', limit=7)]
         
+        logger.debug(f"Found prices: {out}")
+        
         if not date:
-            return out[0]
+            return out[0] if out else []
 
         if date:
             # Calculate days away

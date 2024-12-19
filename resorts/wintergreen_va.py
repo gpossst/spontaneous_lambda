@@ -9,7 +9,7 @@ async def get_prices_async(page, date=None):
             date = '2024-12-14'  # Default date if none provided
             
         url = f"https://wintergreenresort.ltibooking.com/products/search?start_date={date}"
-        await page.goto(url, wait_until='networkidle', timeout=4500)
+        await page.goto(url, wait_until='networkidle', timeout=30000)
         
         content = await page.content()
         soup = BeautifulSoup(content, 'html.parser')
