@@ -4,6 +4,8 @@ phases:
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
+      - aws sts get-caller-identity
+      - aws ecr describe-repositories --repository-names spontaneous_server || aws ecr create-repository --repository-name spontaneous_server
       - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 471112837335.dkr.ecr.us-east-1.amazonaws.com
       - REPOSITORY_URI=471112837335.dkr.ecr.us-east-1.amazonaws.com/spontaneous_server
       - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
