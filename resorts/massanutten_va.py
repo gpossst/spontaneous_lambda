@@ -6,8 +6,8 @@ async def get_prices_async(page, date=None):
     """Get ski prices for Massanutten"""
     try:
         if not date:
-            date = '2024-12-14'
-        
+            date = datetime.now().strftime('%Y-%m-%d')
+            
         dates = date.split('-')
             
         url = f"https://book.massresort.com/ecomm/shop/calendar/6548646/en-US/?productcategoryid=117&startmonth={dates[1]}&startYear={dates[0]}"
@@ -30,7 +30,7 @@ async def get_prices_async(page, date=None):
             for item in data:
                 if item['Date'] == date and item['AgeCategory'] == 8:
                     price = round(float(item['Price']))
-                    return f'${price}'
+                    return {'price': price, 'resort_id': 2, 'resort_name': 'Massanutten Resort'}
             print(f"Calendar data received: {data}")
             return data
             

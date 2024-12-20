@@ -6,7 +6,7 @@ async def get_prices_async(page, date=None):
     """Get ski prices for Wintergreen"""
     try:
         if not date:
-            date = '2024-12-14'  # Default date if none provided
+            date = datetime.now().strftime('%Y-%m-%d')
             
         url = f"https://wintergreenresort.ltibooking.com/products/search?start_date={date}"
         await page.goto(url, wait_until='networkidle', timeout=30000)
@@ -24,7 +24,7 @@ async def get_prices_async(page, date=None):
                 if price_button:
                     string = price_button.text.strip().split(' ')[0]
                     price = round(float(string.replace('$', '')))
-                    return f'${price}'
+                    return {'price': price, 'resort_id': 3, 'resort_name': 'Wintergreen Resort'}
                 break
         
         return prices

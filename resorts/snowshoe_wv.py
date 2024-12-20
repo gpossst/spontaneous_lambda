@@ -40,7 +40,7 @@ async def get_prices_async(page, date=None):
             if 0 <= days_away < len(out):
                 return out[days_away]
                 
-        return out[0]
+        return {'price': out[0], 'resort_id': 1, 'resort_name': 'Snowshoe Mountain'}
         
     except Exception as e:
         print(f"Error getting Snowshoe prices: {e}")

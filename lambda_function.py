@@ -1,3 +1,4 @@
+import datetime
 from playwright.async_api import async_playwright
 import json
 import time
@@ -8,10 +9,13 @@ logger = logging.getLogger(__name__)
 
 async def get_ski_prices_async(date, resorts=None):
     if resorts is None:
-        resorts = ['snowshoe', 'wintergreen']
+        resorts = ['snowshoe', 'wintergreen', 'massanutten']
+
+    if date is None:
+        date = datetime.now().strftime('%Y-%m-%d')
         
     start_time = time.time()
-    results = {}
+    results = []
     
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
@@ -27,27 +31,27 @@ async def get_ski_prices_async(date, resorts=None):
                 'massanutten': massanutten_va.get_prices_async,
             }
             
-            for resort in resorts:
-                if resort in resort_functions:
+            for resort_id in resorts:
+                if resort_id in resort_functions:
                     try:
-                        results[resort] = {
-                            'price': await resort_functions[resort](page, date),
-                            'status': 'success'
-                        }
+                        resort_data = await resort_functions[resort_id](page, date)
+                        results.append({
+                            'date': date,
+                            'price': resort_data['price'],
+                            'resort_id': resort_data['resort_id'],
+                            'resort_name': resort_data['resort_name']
+                        })
                     except Exception as e:
-                        logger.error(f"Error processing {resort}: {str(e)}")
-                        results[resort] = {
+                        logger.error(f"Error processing {resort_id}: {str(e)}")
+                        # Get resort metadata even in case of error
+                        resort_metadata = resort_functions[resort_id].get_metadata()
+                        results.append({
+                            'date': date,
                             'price': None,
-                            'status': 'error',
-                            'message': str(e)
-                        }
-                else:
-                    results[resort] = {
-                        'price': None,
-                        'status': 'error',
-                        'message': 'Invalid resort specified'
-                    }
-                    
+                            'resort_id': resort_metadata['resort_id'],
+                            'resort_name': resort_metadata['resort_name']
+                        })
+
             execution_time = time.time() - start_time
             
             return {
