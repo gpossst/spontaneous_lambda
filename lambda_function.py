@@ -43,14 +43,10 @@ async def get_ski_prices_async(date, resorts=None):
                         })
                     except Exception as e:
                         logger.error(f"Error processing {resort_id}: {str(e)}")
-                        # Get resort metadata even in case of error
-                        resort_metadata = resort_functions[resort_id].get_metadata()
-                        results.append({
-                            'date': date,
-                            'price': None,
-                            'resort_id': resort_metadata['resort_id'],
-                            'resort_name': resort_metadata['resort_name']
-                        })
+                        return {
+                            "error": str(e),
+                            "execution_time_seconds": round(time.time() - start_time, 2)
+                        }
 
             execution_time = time.time() - start_time
             
