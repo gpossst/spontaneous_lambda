@@ -23,7 +23,7 @@ async def get_prices_async(page, date=None):
         
         content = await page.content()
         soup = BeautifulSoup(content, 'html.parser')
-        out = [span.text for span in soup.find_all('span', class_='price-major', limit=7)]
+        out = [int(span.text.replace('$', '')) for span in soup.find_all('span', class_='price-major', limit=7)]
         
         logger.debug(f"Found prices: {out}")
         
@@ -38,7 +38,7 @@ async def get_prices_async(page, date=None):
             
             # Return price for that day if available
             if 0 <= days_away < len(out):
-                return out[days_away]
+                return {'price': out[days_away], 'resort_id': 1, 'resort_name': 'Snowshoe Mountain'}
                 
         return {'price': out[0], 'resort_id': 1, 'resort_name': 'Snowshoe Mountain'}
         
