@@ -16,7 +16,6 @@ async def get_prices_async(page, date=None):
         
         product_rows = soup.findAll('div', class_="product-row")
         
-        prices = []
         for row in product_rows:
             title_link = row.find('div').find('h3').find('a', string="Wintergreen Resort 8 Hour Lift Ticket")
             if title_link:
@@ -24,11 +23,14 @@ async def get_prices_async(page, date=None):
                 if price_button:
                     string = price_button.text.strip().split(' ')[0]
                     price = round(float(string.replace('$', '')))
-                    return {'price': price, 'resort_id': 3, 'resort_name': 'Wintergreen Resort'}
-                break
+                    return {
+                        'price': price, 
+                        'resort_id': 3, 
+                        'resort_name': 'Wintergreen Resort'
+                    }
         
-        return prices
+        raise Exception("No prices found for Wintergreen")
         
     except Exception as e:
-        print(f"Error getting Wintergreen prices: {e}")
-        return []
+        logger.error(f"Error getting Wintergreen prices: {e}")
+        raise

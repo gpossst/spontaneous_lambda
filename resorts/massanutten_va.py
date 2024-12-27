@@ -12,17 +12,14 @@ async def get_prices_async(page, date=None):
             
         url = f"https://book.massresort.com/ecomm/shop/calendar/6548646/en-US/?productcategoryid=117&startmonth={dates[1]}&startYear={dates[0]}"
         
-        # Create a list to store the response
         calendar_data = []
         
-        # Set up network request interceptor
         async def handle_response(response):
             if "ActivityCalendar" in response.url:
                 calendar_data.append(await response.json())
                 
         page.on("response", handle_response)
         
-        # Navigate to the page
         await page.goto(url, wait_until='networkidle', timeout=30000)
         
         if calendar_data:
@@ -30,12 +27,14 @@ async def get_prices_async(page, date=None):
             for item in data:
                 if item['Date'] == date and item['AgeCategory'] == 8:
                     price = round(float(item['Price']))
-                    return {'price': price, 'resort_id': 2, 'resort_name': 'Massanutten Resort'}
-            print(f"Calendar data received: {data}")
-            return data
+                    return {
+                        'price': price, 
+                        'resort_id': 2, 
+                        'resort_name': 'Massanutten Resort'
+                    }
+                    
+        raise Exception("No prices found for Massanutten")
             
-        return []
-        
     except Exception as e:
-        print(f"Error getting Massanutten prices: {e}")
-        return []
+        logger.error(f"Error getting Massanutten prices: {e}")
+        raise
