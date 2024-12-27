@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from playwright.async_api import TimeoutError as PlaywrightTimeout
 from datetime import datetime
+import logging
 
 async def get_prices_async(page, date=None):
     """Get ski prices for Massanutten"""
