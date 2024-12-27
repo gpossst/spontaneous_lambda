@@ -4,6 +4,8 @@ import uvicorn
 import os
 import logging
 from lambda_function import get_ski_prices_async
+from config.supabase import supabase
+from datetime import datetime
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -20,6 +22,22 @@ async def get_prices(date: Optional[str] = Query(None), resorts: Optional[str] =
         response = await get_ski_prices_async(date, resorts.split(',') if resorts else None)
         logger.debug(f"Response: {response}")
         
+        # Store results in Supabase if we have valid data
+        if 'results' in response:
+            for result in response['results']:
+                data = {
+                    'date': result['date'],
+                    'price': result['price'],
+                    'resort_name': result['resort_name'],
+                    'resort_id': result['resort_id'],
+                    'created_at': datetime.now().isoformat(),
+                }
+                try:
+                    supabase.table('prices').insert(data).execute()
+                    logger.debug(f"Stored price data in Supabase: {data}")
+                except Exception as e:
+                    logger.error(f"Failed to store price in Supabase: {str(e)}")
+        
         return response
         
     except Exception as e:
@@ -29,3 +47,5 @@ async def get_prices(date: Optional[str] = Query(None), resorts: Optional[str] =
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("app:app", host="0.0.0.0", port=port) 
+
+# uvicorn app:app --reload

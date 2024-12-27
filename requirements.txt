@@ -2,3 +2,5 @@ playwright
 beautifulsoup4
 fastapi
 uvicorn
+supabase
+python-dotenv
