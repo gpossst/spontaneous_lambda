@@ -20,7 +20,6 @@ async def get_prices(date: Optional[str] = Query(None), resorts: Optional[str] =
         
         # Use the async version of get_ski_prices
         response = await get_ski_prices_async(date, resorts.split(',') if resorts else None)
-        logger.debug(f"Response: {response}")
         
         # Store results in Supabase if we have valid data
         if 'results' in response:

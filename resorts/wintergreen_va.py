@@ -12,11 +12,18 @@ async def get_prices_async(page, date=None):
             date = datetime.now().strftime('%Y-%m-%d')
             
         url = f"https://wintergreenresort.ltibooking.com/products/search?start_date={date}"
-        await page.goto(url, wait_until='networkidle', timeout=30000)
+        await page.goto(url, wait_until='networkidle', timeout=10000)
         
         content = await page.content()
+        if not content:
+            logger.error("No content received from Wintergreen")
+            return {
+                'price': -1,
+                'resort_id': 3,
+                'resort_name': 'Wintergreen Resort'
+            }
+
         soup = BeautifulSoup(content, 'html.parser')
-        
         product_rows = soup.findAll('div', class_="product-row")
         
         for row in product_rows:
@@ -27,13 +34,22 @@ async def get_prices_async(page, date=None):
                     string = price_button.text.strip().split(' ')[0]
                     price = round(float(string.replace('$', '')))
                     return {
-                        'price': price, 
-                        'resort_id': 3, 
+                        'price': price if price > 0 else -1,
+                        'resort_id': 3,
                         'resort_name': 'Wintergreen Resort'
                     }
         
-        raise Exception("No prices found for Wintergreen")
-        
+        logger.error(f"No matching price found for date {date}")
+        return {
+            'price': -1,
+            'resort_id': 3,
+            'resort_name': 'Wintergreen Resort'
+        }
+            
     except Exception as e:
         logger.error(f"Error getting Wintergreen prices: {e}")
-        raise
+        return {
+            'price': -1,
+            'resort_id': 3,
+            'resort_name': 'Wintergreen Resort'
+        }
