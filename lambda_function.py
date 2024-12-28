@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 async def get_ski_prices_async(date, resorts=None):
     if resorts is None:
-        resorts = ['snowshoe', 'wintergreen', 'massanutten']
+        resorts = ['snowshoe', 'wintergreen', 'massanutten', 'sugar']
 
     if date is None:
         date = datetime.now().strftime('%Y-%m-%d')
