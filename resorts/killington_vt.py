@@ -35,8 +35,8 @@ async def get_prices_async(page, date=None):
             logger.error("No content received from Stratton")
             return {
                 'price': -1,
-                'resort_id': 10,
-                'resort_name': 'Pico Mountain'
+                'resort_id': 11,
+                'resort_name': 'Killington Ski Resort'
             }
 
         soup = BeautifulSoup(content, 'html.parser')
@@ -51,21 +51,21 @@ async def get_prices_async(page, date=None):
                     price = round(float(price_str))
                     return {
                         'price': price if price > 0 else -1,
-                        'resort_id': 10,
-                        'resort_name': 'Pico Mountain'
+                        'resort_id': 11,
+                        'resort_name': 'Killington Ski Resort'
                     }
         
         logger.error(f"No matching price found for date {date}")
         return {
             'price': -1,
-            'resort_id': 10,
-            'resort_name': 'Pico Mountain'
+            'resort_id': 11,
+            'resort_name': 'Killington Ski Resort'
         }
             
     except Exception as e:
         logger.error(f"Error getting Pico Mountain prices: {e}")
         return {
             'price': -1,
-            'resort_id': 10,
-            'resort_name': 'Pico Mountain'
+            'resort_id': 11,
+            'resort_name': 'Killington Ski Resort'
         }
