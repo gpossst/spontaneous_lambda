@@ -2,14 +2,14 @@ import datetime
 from playwright.async_api import async_playwright
 import json
 import time
-from resorts import snowshoe_wv, wintergreen_va, massanutten_va, sugar_mtn_nc, beech_nc, blue_knob_pa
+from resorts import snowshoe_wv, wintergreen_va, massanutten_va, sugar_mtn_nc, beech_nc, blue_knob_pa, winterplace_wv
 import logging
 
 logger = logging.getLogger(__name__)
 
 async def get_ski_prices_async(date, resorts=None):
     if resorts is None:
-        resorts = ['snowshoe', 'wintergreen', 'massanutten', 'sugar', 'beech', 'blue_knob']
+        resorts = ['snowshoe', 'wintergreen', 'massanutten', 'sugar', 'beech', 'blue_knob', 'winterplace']
 
     if date is None:
         date = datetime.now().strftime('%Y-%m-%d')
@@ -33,6 +33,7 @@ async def get_ski_prices_async(date, resorts=None):
                 'sugar': sugar_mtn_nc.get_prices_async,
                 'beech': beech_nc.get_prices_async,
                 'blue_knob': blue_knob_pa.get_prices_async,
+                'winterplace': winterplace_wv.get_prices_async,
             }
             
             for resort_id in resorts:
