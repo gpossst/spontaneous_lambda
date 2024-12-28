@@ -7,9 +7,14 @@ from lambda_function import get_ski_prices_async
 from config.supabase import supabase
 from datetime import datetime
 
-# Set up logging
-logging.basicConfig(level=logging.DEBUG)
+# Set logging level to INFO or higher to suppress DEBUG messages
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("hpack").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+
+# Keep your app's logging at desired level
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 app = FastAPI()
 
