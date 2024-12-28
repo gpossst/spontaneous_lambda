@@ -21,7 +21,7 @@ async def get_prices_async(page, date=None):
             return {
                 'price': -1,
                 'resort_id': 7,
-                'resort_name': 'Blue Knob'
+                'resort_name': 'Blue Knob All Seasons Resort'
             }
 
         soup = BeautifulSoup(content, 'html.parser')
@@ -38,14 +38,14 @@ async def get_prices_async(page, date=None):
                     return {
                         'price': price if price > 0 else -1,
                         'resort_id': 7,
-                        'resort_name': 'Blue Knob'
+                        'resort_name': 'Blue Knob All Seasons Resort'
                     }
         
         logger.error(f"No matching price found for date {date}")
         return {
             'price': -1,
             'resort_id': 7,
-            'resort_name': 'Blue Knob'
+            'resort_name': 'Blue Knob All Seasons Resort'
         }
             
     except Exception as e:
@@ -53,5 +53,5 @@ async def get_prices_async(page, date=None):
         return {
             'price': -1,
             'resort_id': 7,
-            'resort_name': 'Blue Knob'
+            'resort_name': 'Blue Knob All Seasons Resort'
         }

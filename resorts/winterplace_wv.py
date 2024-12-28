@@ -21,7 +21,7 @@ async def get_prices_async(page, date=None):
                 return {
                     'price': -1,
                     'resort_id': 8,
-                    'resort_name': 'Winterplace'
+                    'resort_name': 'Winterplace Ski Resort'
                 }
 
             soup = BeautifulSoup(content, 'html.parser')
@@ -35,7 +35,7 @@ async def get_prices_async(page, date=None):
                     return {
                         'price': price if price > 0 else -1,
                         'resort_id': 8,
-                        'resort_name': 'Winterplace'
+                        'resort_name': 'Winterplace Ski Resort'
                     }
             
             await page.get_by_text("Next 4 Weeks").first.click()
@@ -47,7 +47,7 @@ async def get_prices_async(page, date=None):
         return {
             'price': -1,
             'resort_id': 8,
-            'resort_name': 'Winterplace'
+            'resort_name': 'Winterplace Ski Resort'
         }
             
     except Exception as e:
@@ -55,5 +55,5 @@ async def get_prices_async(page, date=None):
         return {
             'price': -1,
             'resort_id': 8,
-            'resort_name': 'Winterplace'
+            'resort_name': 'Winterplace Ski Resort'
         }
