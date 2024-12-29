@@ -51,9 +51,6 @@ async def get_prices_async(page, date=None):
         await page.wait_for_timeout(2000)
 
         content = await page.content()
-        with open('test.html', 'w') as f:
-            f.write(content)
-
         
         if not content:
             logger.error("No content received from Magic Mountain")
