@@ -2,14 +2,30 @@ import datetime
 from playwright.async_api import async_playwright
 import json
 import time
-from resorts import snowshoe_wv, wintergreen_va, massanutten_va, sugar_mtn_nc, beech_nc, blue_knob_pa, winterplace_wv, stratton_vt, pico_vt, killington_vt, magic_mtn_vt
+from resorts import snowshoe_wv, wintergreen_va, massanutten_va, sugar_mtn_nc, beech_nc, blue_knob_pa, winterplace_wv, stratton_vt, pico_vt, killington_vt, magic_mtn_vt, mad_river_glen_vt
 import logging
 
 logger = logging.getLogger(__name__)
 
 async def get_ski_prices_async(date, resorts=None):
+    resort_functions = {
+        'snowshoe': snowshoe_wv.get_prices_async,
+        'wintergreen': wintergreen_va.get_prices_async,
+        'massanutten': massanutten_va.get_prices_async,
+        # 'vail': vail_co.get_prices_async,
+        'sugar': sugar_mtn_nc.get_prices_async,
+        'beech': beech_nc.get_prices_async,
+        'blue_knob': blue_knob_pa.get_prices_async,
+        'winterplace': winterplace_wv.get_prices_async,
+        'stratton': stratton_vt.get_prices_async,
+        'pico': pico_vt.get_prices_async,
+        'killington': killington_vt.get_prices_async,
+        'magic': magic_mtn_vt.get_prices_async,
+        'mad_river_glen': mad_river_glen_vt.get_prices_async,
+    }
+
     if resorts is None:
-        resorts = ['snowshoe', 'wintergreen', 'massanutten', 'sugar', 'beech', 'blue_knob', 'winterplace', 'stratton', 'pico', 'killington', 'magic']
+        resorts = list(resort_functions.keys())
 
     if date is None:
         date = datetime.now().strftime('%Y-%m-%d')
@@ -25,21 +41,6 @@ async def get_ski_prices_async(date, resorts=None):
         page = await browser.new_page(viewport={'width': 1280, 'height': 720})
         
         try:
-            resort_functions = {
-                'snowshoe': snowshoe_wv.get_prices_async,
-                'wintergreen': wintergreen_va.get_prices_async,
-                'massanutten': massanutten_va.get_prices_async,
-                # 'vail': vail_co.get_prices_async,
-                'sugar': sugar_mtn_nc.get_prices_async,
-                'beech': beech_nc.get_prices_async,
-                'blue_knob': blue_knob_pa.get_prices_async,
-                'winterplace': winterplace_wv.get_prices_async,
-                'stratton': stratton_vt.get_prices_async,
-                'pico': pico_vt.get_prices_async,
-                'killington': killington_vt.get_prices_async,
-                'magic': magic_mtn_vt.get_prices_async,
-            }
-            
             for resort_id in resorts:
                 if resort_id in resort_functions:
                     try:
