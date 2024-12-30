@@ -23,7 +23,6 @@ async def get_prices_async(page, date=None):
         try:
             date_picker = await page.wait_for_selector('input[placeholder="Pick a date"]', timeout=5000)
             await date_picker.click()
-            print("clicked date picker")
             await page.wait_for_timeout(500)  # Wait for calendar to open
         except PlaywrightTimeout:
             logger.error("Could not find date picker input")
@@ -33,7 +32,6 @@ async def get_prices_async(page, date=None):
             try:
                 next_month_button = await page.wait_for_selector('span.DayPicker-NavButton.DayPicker-NavButton--next', timeout=5000)
                 await next_month_button.click()
-                print("clicked next month button")
                 await page.wait_for_timeout(500)  # Small delay between clicks
             except PlaywrightTimeout:
                 logger.error("Could not find next month button")
@@ -46,8 +44,6 @@ async def get_prices_async(page, date=None):
         day_selector = f'div[aria-label="{formatted_date}"]'
         day_button = await page.wait_for_selector(day_selector, timeout=5000)
         await day_button.click()
-        print(day_button)
-        print("clicked day button")
         await page.wait_for_timeout(2000)
 
         content = await page.content()

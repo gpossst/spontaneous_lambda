@@ -12,7 +12,6 @@ async def get_prices_async(page, date=None):
             date = datetime.now().strftime('%Y-%m-%d')
             
         url = f"https://blueknob.ltibooking.com/products/search?start_date={date}"
-        print(url)
         await page.goto(url, wait_until='networkidle', timeout=10000)
         
         content = await page.content()
@@ -30,7 +29,6 @@ async def get_prices_async(page, date=None):
         for row in product_rows:
             title_link = row.find('div').find('h3').find('a', string="Blue Knob | Day Lift Ticket")
             if title_link:
-                print("found link")
                 price_button = row.find('a', class_='product-row__button').find('span', class_='button__text')
                 if price_button:
                     string = price_button.text.strip().split(' ')[0]

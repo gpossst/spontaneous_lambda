@@ -39,7 +39,6 @@ async def get_prices_async(page, date=None):
                     }
             
             await page.get_by_text("Next 4 Weeks").first.click()
-            print("clicked next 4 weeks")
             await page.wait_for_load_state('networkidle')
                 
             
