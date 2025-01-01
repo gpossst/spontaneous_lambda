@@ -23,24 +23,35 @@ async def get_prices(date: Optional[str] = Query(None), resorts: Optional[str] =
     try:
         logger.debug(f"Received request - date: {date}, resorts: {resorts}")
         
-        # Use the async version of get_ski_prices
+        # Batch your Supabase operations
+        supabase_operations = []
+        
         response = await get_ski_prices_async(date, resorts.split(',') if resorts else None)
         
-        # Store results in Supabase if we have valid data
         if 'results' in response:
-            for result in response['results']:
-                data = {
+            # Create a single batch of operations
+            supabase_operations = [
+                {
                     'date': result['date'],
                     'price': result['price'],
                     'resort_name': result['resort_name'],
                     'resort_id': result['resort_id'],
                     'created_at': datetime.now().isoformat(),
                 }
+                for result in response['results']
+                if result['price'] != -1
+            ]
+            
+            # Perform a single batch upsert if we have operations
+            if supabase_operations:
                 try:
-                    supabase.table('prices').insert(data).execute()
-                    logger.debug(f"Stored price data in Supabase: {data}")
+                    supabase.table('prices').upsert(
+                        supabase_operations,
+                        on_conflict='date,resort_id'
+                    ).execute()
+                    logger.debug(f"Batch upserted {len(supabase_operations)} records")
                 except Exception as e:
-                    logger.error(f"Failed to store price in Supabase: {str(e)}")
+                    logger.error(f"Failed to batch upsert prices in Supabase: {str(e)}")
         
         return response
         

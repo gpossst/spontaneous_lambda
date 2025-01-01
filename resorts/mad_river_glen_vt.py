@@ -47,10 +47,8 @@ async def get_prices_async(page, date=None):
         for cell in calendar_cells:
             day_label = cell.find('span', class_='cal-day-label')
             if day_label and day_label.text.strip() == target_day:
-                print(cell)
                 price_element = cell.find('span', class_='cal-item-price')
                 if price_element:
-                    print(price_element)
                     price_str = price_element.text.strip().replace('$', '')
                     price = round(float(price_str))
                     return {

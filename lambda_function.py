@@ -4,6 +4,7 @@ import json
 import time
 from resorts import snowshoe_wv, wintergreen_va, massanutten_va, sugar_mtn_nc, beech_nc, blue_knob_pa, winterplace_wv, stratton_vt, pico_vt, killington_vt, magic_mtn_vt, mad_river_glen_vt, wachusett_mtn_vt
 import logging
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -32,62 +33,63 @@ async def get_ski_prices_async(date, resorts=None):
         date = datetime.now().strftime('%Y-%m-%d')
         
     start_time = time.time()
-    results = []
+    
+    # Add semaphore for concurrent page limit
+    MAX_CONCURRENT_PAGES = 3  # Adjust this number based on your needs
+    PAGE_POOL = []
+    page_pool_semaphore = asyncio.Semaphore(MAX_CONCURRENT_PAGES)
+    
+    async def get_page():
+        if not PAGE_POOL:
+            return await context.new_page()
+        return PAGE_POOL.pop()
+        
+    async def release_page(page):
+        if len(PAGE_POOL) < MAX_CONCURRENT_PAGES:
+            PAGE_POOL.append(page)
+        else:
+            await page.close()
     
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
             headless=True,
             args=['--no-sandbox', '--disable-dev-shm-usage']
         )
-        page = await browser.new_page(viewport={'width': 1280, 'height': 720})
+        
+        context = await browser.new_context(viewport={'width': 1280, 'height': 720})
         
         try:
-            for resort_id in resorts:
-                if resort_id in resort_functions:
+            async def process_resort(resort_id):
+                async with page_pool_semaphore:
+                    page = await get_page()
                     try:
                         resort_data = await resort_functions[resort_id](page, date)
-                        results.append({
+                        await release_page(page)
+                        return {
                             'date': date,
                             'price': resort_data['price'],
                             'resort_id': resort_data['resort_id'],
                             'resort_name': resort_data['resort_name']
-                        })
-                    except Exception as e:
-                        logger.error(f"Error processing {resort_id}: {str(e)}")
-                        return {
-                            "error": str(e),
-                            "execution_time_seconds": round(time.time() - start_time, 2)
                         }
+                    except Exception as e:
+                        await release_page(page)
+                        logger.error(f"Error processing {resort_id}: {str(e)}")
+                        return None
 
-            execution_time = time.time() - start_time
-            
+            tasks = [process_resort(resort_id) for resort_id in resorts if resort_id in resort_functions]
+            results = [r for r in await asyncio.gather(*tasks) if r is not None]
+
             return {
                 "results": results,
-                "execution_time_seconds": round(execution_time, 2)
+                "execution_time_seconds": round(time.time() - start_time, 2)
             }
-            
+
         except Exception as e:
             logger.error(f"Browser error: {str(e)}")
             return {
                 "results": {"error": str(e)},
                 "execution_time_seconds": round(time.time() - start_time, 2)
             }
-            
-        finally:
-            if page:
-                try:
-                    await page.close()
-                except:
-                    pass
-            if browser:
-                try:
-                    await browser.close()
-                except:
-                    pass
-            try:
-                await playwright.stop()
-            except:
-                pass
 
 def lambda_handler(event, context):
     try:
