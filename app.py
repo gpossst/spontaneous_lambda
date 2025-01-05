@@ -23,35 +23,52 @@ async def get_prices(date: Optional[str] = Query(None), resorts: Optional[str] =
     try:
         logger.debug(f"Received request - date: {date}, resorts: {resorts}")
         
-        # Batch your Supabase operations
-        supabase_operations = []
-        
         response = await get_ski_prices_async(date, resorts.split(',') if resorts else None)
         
         if 'results' in response:
-            # Create a single batch of operations
-            supabase_operations = [
-                {
-                    'date': result['date'],
-                    'price': result['price'],
-                    'resort_name': result['resort_name'],
-                    'resort_id': result['resort_id'],
-                    'created_at': datetime.now().isoformat(),
+            try:
+                # Get all existing prices for this date in one query
+                date_to_check = response['results'][0]['date']  # All results have same date
+                existing_prices = supabase.table('prices').select('*').eq('date', date_to_check).execute()
+                existing_map = {
+                    (record['date'], record['resort_id']): record 
+                    for record in existing_prices.data
                 }
-                for result in response['results']
-                if result['price'] != -1
-            ]
-            
-            # Perform a single batch upsert if we have operations
-            if supabase_operations:
-                try:
-                    supabase.table('prices').upsert(
-                        supabase_operations,
-                        on_conflict='date,resort_id'
-                    ).execute()
-                    logger.debug(f"Batch upserted {len(supabase_operations)} records")
-                except Exception as e:
-                    logger.error(f"Failed to batch upsert prices in Supabase: {str(e)}")
+                
+                # Prepare insert and update operations
+                to_insert = []
+                to_update = []
+                
+                for result in response['results']:
+                    key = (result['date'], result['resort_id'])
+                    operation = {
+                        'date': result['date'],
+                        'price': result['price'],
+                        'resort_name': result['resort_name'],
+                        'resort_id': result['resort_id'],
+                        'created_at': datetime.now().isoformat(),
+                    }
+                    
+                    if key not in existing_map:
+                        # No existing record, add to insert batch
+                        to_insert.append(operation)
+                    elif result['price'] != -1:
+                        # Existing record and valid price, add to update batch
+                        to_update.append(operation)
+                
+                # Perform batch operations
+                if to_insert:
+                    supabase.table('prices').insert(to_insert).execute()
+                    logger.debug(f"Inserted {len(to_insert)} new records")
+                
+                if to_update:
+                    # Note: Supabase doesn't support true batch updates, so we still need to do these individually
+                    for op in to_update:
+                        supabase.table('prices').update(op).eq('date', op['date']).eq('resort_id', op['resort_id']).execute()
+                    logger.debug(f"Updated {len(to_update)} existing records")
+                    
+            except Exception as e:
+                logger.error(f"Failed to upsert prices in Supabase: {str(e)}")
         
         return response
         
