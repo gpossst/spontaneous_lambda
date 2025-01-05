@@ -23,22 +23,54 @@ async def get_prices_async(page, date=None):
             
             await page.goto(url, wait_until='networkidle', timeout=10000)
             
-            # Updated selector to check both month and day
-            date_selector = await page.wait_for_selector(f"div.date:has(span:text-matches('{month}', 'i')):has-text('{day}')", timeout=5000)
-            await date_selector.click()
-            # Add a small wait to ensure content loads after click
-            await page.wait_for_timeout(3000)
+            # Click the date input field
+            date_input = await page.wait_for_selector('input.n-input__input-el[placeholder="SELECT A DATE TO PURCHASE"]', timeout=5000)
+            await date_input.click()
+
+            # Keep clicking next month button until we reach target month
+            while True:
+                print("Clicking next month button")
+                # Get current displayed month
+                current_month = await page.evaluate('''() => {
+                    const monthElement = document.querySelector('.n-date-panel-month__text');
+                    return monthElement ? monthElement.textContent.split(' ')[0] : '';
+                }''')
+                
+                if current_month.strip() == month:
+                    break
+                    
+                # Click next month button
+                next_button = await page.wait_for_selector('div.n-date-panel-month__next')
+                await next_button.click()
+                await page.wait_for_timeout(100)  # Small delay to let calendar update
+            
+            # Find and click the target day
+            day_button = await page.wait_for_selector(f'div[data-n-date="true"].n-date-panel-date:has-text("{day}")')
+            await day_button.click()
+            
+            # Add a small wait to ensure calendar loads
+            await page.wait_for_timeout(1000)
 
             content = await page.content()
             soup = BeautifulSoup(content, 'html.parser')
-            price_element = soup.findAll('div', class_='accordion-item')
+            price_element = soup.findAll('div', class_='category-product-tile')
             for item in price_element:
-                header = item.find('h5')
-                if header and header.text.strip() == '8 Hour - Active at First Gate Scan':
-                    price = item.findAll('strong')[0].text.strip().replace('$', '')
-                    price = round(float(price))
+                label = item.find('div', class_='category-product-varaint-name')
+                print(label.text.strip())
+                if label and "8 Hour" in label.text.strip():
+                    price_div = item.find('div', class_='category-product-tile__price')
+                    if price_div:
+                        price_value = price_div.find('div', string=lambda x: x and '$' in x)
+                        if price_value:
+                            price = price_value.text.strip().replace('$', '')
+                            price = round(float(price))
+                            return {
+                                'price': price if price > 0 else -1,
+                                'resort_id': 14,
+                                'resort_name': 'Wachusett Mountain'
+                            }
                     return {
-                        'price': price if price > 0 else -1,
+                        'price': -1,
                         'resort_id': 14,
                         'resort_name': 'Wachusett Mountain'
                     }
