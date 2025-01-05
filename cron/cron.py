@@ -1,7 +1,13 @@
 import asyncio
 import logging
 from datetime import datetime
-from lambda_function import get_ski_prices_async
+import sys
+from pathlib import Path
+
+# Add the parent directory to Python path so we can import from root
+sys.path.append(str(Path(__file__).parent.parent))
+
+from app import get_ski_prices_async  # Import from app.py instead of lambda_function
 from config.supabase import supabase
 
 # Set up logging
@@ -11,7 +17,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-async def cron():
+async def fetch_daily_prices():
     try:
         # Get today's date in YYYY-MM-DD format
         today = datetime.now().strftime('%Y-%m-%d')
@@ -51,4 +57,4 @@ async def cron():
         logger.error(f"Error in fetch_daily_prices: {str(e)}", exc_info=True)
 
 if __name__ == "__main__":
-    asyncio.run(cron()) 
+    asyncio.run(fetch_daily_prices())
